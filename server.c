@@ -8,15 +8,12 @@
 
 #define buffer 256
 
-const char MESSAGE[] = "PAVONE&CAPRAINSITUA";
-
-
 int main(int argc, char *argv[]) {
-
     int simpleSocket = 0;
     int simplePort = 0;
     int returnStatus = 0;
     struct sockaddr_in simpleServer;
+
 
     if (2 != argc) {
 
@@ -66,50 +63,94 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Cannot listen on socket!\n");
 		close(simpleSocket);
         exit(1);
-    }
+    }else{
 
     while (1) {
-
         struct sockaddr_in clientName = { 0 };
-	int simpleChildSocket = 0;
-	int clientNameLength = sizeof(clientName);
-
-	/* wait here */
+	    int simpleChildSocket = 0;
+	    int clientNameLength = sizeof(clientName);
+	   /* wait here */
 
         simpleChildSocket = accept(simpleSocket,(struct sockaddr *)&clientName, &clientNameLength);
 
-	if (simpleChildSocket == -1) {
+        if (simpleChildSocket == -1) {
 
-        fprintf(stderr, "Cannot accept connections!\n");
-	    close(simpleSocket);
-	    exit(1);
+            fprintf(stderr, "Cannot accept connections!\n");
+            close(simpleSocket);
+            exit(1);
+        }
 
-	}
+    /* handle the new connection request  */     
 
-        /* handle the new connection request  */
+    /* il server si mette in ascolto per ricevere l'ID dal client */
+        int rId;
+        char sId[buffer] = "";    
+        char messaggio [buffer] = "";
+
+        rId = read(simpleChildSocket,sId,sizeof(sId));
+
+        int userID = atoi(sId);
+
+        if(userID<1 || userID>20){
+            strcpy(messaggio,"ER Utente non valido. ARRIVEDERCI.\n");
+            close(simpleSocket);
+        }
+        else{
+            strcpy(messaggio,"OK Benvenuto Utente ");
+            //char messaggio [buffer]="";
+            strcat (messaggio,sId);
+            strcat (messaggio,"\n");
+        }
+        
+        
         
         
         //Ricezione ID dal Client
-        
-        int rId;
-        char sId[buffer] = "";
-       
-       
-        rId = read(simpleSocket,sId,strlen(sId));
-         
-         //Invio ID al Client
+    
+    
+
+       /*  //Invio ID al Client
          int inviaId;
         
         inviaId = write(simpleSocket, sId, strlen(sId));
+        */
         
         
+	   /* write out our message to the client */
+        //printf("sono qui madonna de dio %d\n", rId);
+        write(simpleChildSocket, messaggio, strlen(messaggio));
         
-	/* write out our message to the client */
-	write(simpleChildSocket, MESSAGE, strlen(MESSAGE));
+        //Comunicazione comando client
+
+
+        int readCmd=0;
+        char cmdBuffer[buffer]="";
+        readCmd= read(simpleChildSocket, cmdBuffer, sizeof(cmdBuffer));
+
+
+        
+
+
+
+
+
+
         close(simpleChildSocket);
 
+
+
+
     }
+}
     //lettura messaggi dal client
+    
+
+
+
+
+
+
+
     close(simpleSocket);
     
     return 0;
