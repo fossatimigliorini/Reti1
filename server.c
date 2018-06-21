@@ -5,8 +5,28 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h> 
+#include <ctype.h>
 
 #define buffer 256
+#define SIZE 4
+#define SENDSIZE 7
+
+const char SEND[SENDSIZE] = "SEND ID"; 
+const char READ[SIZE] = "READ";
+const char DELE[SIZE] = "DELE";
+const char QUIT[SIZE] = "QUIT";
+
+
+
+void convertToUpperCase(char *s){
+    while(*s != '\0'){
+        *s = toupper((unsigned char)*s);
+        ++s;
+    }
+}
+
+
+
 
 int main(int argc, char *argv[]) {
     int simpleSocket = 0;
@@ -82,7 +102,7 @@ int main(int argc, char *argv[]) {
 
     /* handle the new connection request  */     
 
-    /* il server si mette in ascolto per ricevere l'ID dal client */
+    /* ricezione ID dal client */
         int rId;
         char sId[buffer] = "";    
         char messaggio [buffer] = "";
@@ -90,45 +110,51 @@ int main(int argc, char *argv[]) {
         rId = read(simpleChildSocket,sId,sizeof(sId));
 
         int userID = atoi(sId);
-
+    /* invio messagio connessione al client */
         if(userID<1 || userID>20){
-            strcpy(messaggio,"ER Utente non valido. ARRIVEDERCI.\n");
-            close(simpleSocket);
+            strcpy(messaggio,"ER UTENTE NON VALIDO. ARRIVEDERCI.\n");
+            write(simpleChildSocket, messaggio, strlen(messaggio));
+            close(simpleChildSocket);
         }
         else{
-            strcpy(messaggio,"OK Benvenuto Utente ");
+            strcpy(messaggio,"OK BENVENUTO UTENTE ");
             //char messaggio [buffer]="";
             strcat (messaggio,sId);
             strcat (messaggio,"\n");
+            write(simpleChildSocket, messaggio, strlen(messaggio));
         }
-        
-        
-        
-        
-        //Ricezione ID dal Client
-    
-    
-
-       /*  //Invio ID al Client
-         int inviaId;
-        
-        inviaId = write(simpleSocket, sId, strlen(sId));
-        */
-        
-        
-	   /* write out our message to the client */
-        //printf("sono qui madonna de dio %d\n", rId);
-        write(simpleChildSocket, messaggio, strlen(messaggio));
-        
-        //Comunicazione comando client
-
+        //write(simpleChildSocket, messaggio, strlen(messaggio));
+        //Ricezione comando dal Client
 
         int readCmd=0;
-        char cmdBuffer[buffer]="";
-        readCmd= read(simpleChildSocket, cmdBuffer, sizeof(cmdBuffer));
+        char cmd[buffer]="";
+        char msgS[buffer]="";
 
+        readCmd= read(simpleChildSocket, cmd, sizeof(cmd));
+        int rcvID;
+        //char appo[2]="";
+        //memcpy(appo, &cmd[6], 2 );
 
+        convertToUpperCase(cmd);
         
+
+        if(strncmp(cmd ,SEND, SENDSIZE)==0){
+            rcvID=atoi(&cmd[8]);
+            //printf("%s\n",cmd);
+            //printf("L'ID e' : %d\n",rcvID);
+            if(rcvID<1 || rcvID >20){
+                strcpy(messaggio,"ER UTENTE NON VALIDO. ARRIVEDERCI.\n");
+                write(simpleChildSocket, messaggio, strlen(messaggio));
+                close(simpleChildSocket);
+            }else{
+                //GESTIONE ID E MESSAGGIO
+            }
+        }else{
+            strcpy(messaggio,"ER FORMATO NON VALIDO. ARRIVEDERCI.\n");
+            write(simpleChildSocket, messaggio, strlen(messaggio));
+            close(simpleChildSocket);
+        }
+            
 
 
 
@@ -136,12 +162,13 @@ int main(int argc, char *argv[]) {
 
 
         close(simpleChildSocket);
+    }
 
 
 
 
     }
-}
+
     //lettura messaggi dal client
     
 
@@ -155,3 +182,6 @@ int main(int argc, char *argv[]) {
     
     return 0;
 }
+
+
+
