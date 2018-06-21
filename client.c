@@ -7,8 +7,8 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
-#define dim 5
-#define dimCmd 256
+
+#define DIM 256
 
 int main(int argc, char *argv[]) {
     int simpleSocket = 0;
@@ -18,10 +18,8 @@ int main(int argc, char *argv[]) {
     struct sockaddr_in simpleServer;
     
     if (3 != argc) {
-
         fprintf(stderr, "Usage: %s <server> <port>\n", argv[0]);
         exit(1);
-
     }
 
     /* create a streaming socket      */
@@ -88,28 +86,38 @@ int main(int argc, char *argv[]) {
 		
 		sendId = write (simpleSocket,id,strlen(id));
 
-
     //Risposta Identificazione Utente da parte del Server
     returnStatus = read(simpleSocket, buffer, sizeof(buffer));
     
     if ( returnStatus > 0 ) {
         printf("%s",buffer);
+        if(strncmp(buffer, "ER", 2)==0){
+        	close(simpleSocket);
+        	exit(1);
+        }
     } else {
         fprintf(stderr, "Return Status = %d \n", returnStatus);
     } 
     
     // Interazione con il Server
-
-    char cmd[dimCmd]="";
-    int sendCmd=0;
-    printf("Inserire comando: ");
-    scanf("%s",cmd);
-    //fgets(cmd,dimCmd,stdin);
-    sendCmd = write(simpleSocket, cmd, strlen(cmd));
-
-
-
-        close(simpleSocket);
     
+
+   	char cmd[DIM];
+   	int i=0;
+ 
+    printf("Inserire comando:");
+    getchar();
+	fgets(cmd,DIM,stdin);
+
+    write(simpleSocket, cmd, strlen(cmd));
+//	strcpy(buffer, "");
+
+	// Risposta serve al comando    
+    char msg[DIM]="";
+    int rcvMsg=0;
+    rcvMsg = read(simpleSocket, msg, sizeof(msg));
+    printf("%s",msg);
+    
+   	close(simpleSocket);
     return 0;
 }
